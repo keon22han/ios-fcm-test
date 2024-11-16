@@ -31,6 +31,25 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
     }
+    
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // 푸시 데이터 수신
+        print("푸시 메시지 수신: \(userInfo)")
+        
+        // 데이터 처리
+        if let customValue = userInfo["customKey"] as? String {
+            print("Custom Value: \(customValue)")
+        }
+        
+        // 예: 진동 또는 소리 재생
+        GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+        
+        // 작업 완료 처리
+        completionHandler(.newData)
+    }
+
 }
 
 // Cloud Messaging...
@@ -52,42 +71,46 @@ extension AppDelegate: MessagingDelegate{
 
 @available(iOS 10, *)
 extension AppDelegate: UNUserNotificationCenterDelegate {
-  
+    
     // 푸시 메세지가 앱이 켜져있을 때 나올떄
-  func userNotificationCenter(_ center: UNUserNotificationCenter,
-                              willPresent notification: UNNotification,
-                              withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions)
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions)
                                 -> Void) {
-      
-    let userInfo = notification.request.content.userInfo
-
-    
-    // Do Something With MSG Data...
-    if let messageID = userInfo[gcmMessageIDKey] {
-        print("Message ID: \(messageID)")
+        
+        let userInfo = notification.request.content.userInfo
+        
+        
+        // Do Something With MSG Data...
+        if let messageID = userInfo[gcmMessageIDKey] {
+            print("Message ID: \(messageID)")
+        }
+        
+        // MARK: 음악 알림 테스트
+        GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+        print(userInfo)
+        
+        completionHandler([[.banner, .badge, .sound]])
     }
     
-    
-    print(userInfo)
-
-    completionHandler([[.banner, .badge, .sound]])
-  }
-
     // 푸시메세지를 받았을 떄
-  func userNotificationCenter(_ center: UNUserNotificationCenter,
-                              didReceive response: UNNotificationResponse,
-                              withCompletionHandler completionHandler: @escaping () -> Void) {
-    let userInfo = response.notification.request.content.userInfo
-
-    // Do Something With MSG Data...
-    if let messageID = userInfo[gcmMessageIDKey] {
-        print("Message ID: \(messageID)")
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        // MARK: 음악 알림 테스트
+        GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+        print("백그라운드 상태 푸시메세지 받음")
+        // Do Something With MSG Data...
+        if let messageID = userInfo[gcmMessageIDKey] {
+            print("Message ID: \(messageID)")
+        }
+        
+        print(userInfo)
+        
+        completionHandler()
     }
-      
-    print(userInfo)
-
-    completionHandler()
-  }
 }
 
 @main
