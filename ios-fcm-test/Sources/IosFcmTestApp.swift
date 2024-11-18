@@ -3,12 +3,15 @@ import FirebaseCore
 import Firebase
 import FirebaseMessaging
 
-
 class AppDelegate: NSObject, UIApplicationDelegate {
     
     let gcmMessageIDKey = "gcm.message_id"
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        requestNotificationAuthorization()
+        
         FirebaseApp.configure()
+        application.registerForRemoteNotifications()
         
         // MARK: 원격 알림 등록
         UNUserNotificationCenter.current().delegate = self
@@ -18,10 +21,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             options: authOption,
             completionHandler: {_, _ in })
         
-        application.registerForRemoteNotifications()
-        
         // MARK: 메세징 delegate
         Messaging.messaging().delegate = self
+        
+//        Messaging.messaging().token { token, error in
+//            if let error = error {
+//                print("Error fetching FCM token: \(error)")
+//            } else if let token = token {
+//                print("FCM token: \(token)")
+//            }
+//        }
         
         UNUserNotificationCenter.current().delegate = self
         return true
@@ -30,24 +39,39 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // MARK: fcm 토큰이 등록 되었을 때
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
+        print("sdfasfdafasfewfa")
     }
     
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        // 푸시 데이터 수신
-        print("푸시 메시지 수신: \(userInfo)")
         
-        // 데이터 처리
-        if let customValue = userInfo["customKey"] as? String {
-            print("Custom Value: \(customValue)")
+        if let data = userInfo["key1"] {
+            print("\(data)")
+            // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
         }
         
-        // 예: 진동 또는 소리 재생
-        GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+//        if let messageID = userInfo["gcm.message_id"] {
+//            print("Message ID: \(messageID)")
+//        }
         
-        // 작업 완료 처리
+        //print(userInfo)
+        
+        // 예: 진동 또는 소리 재생
+        // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+
         completionHandler(.newData)
+    }
+    
+    func requestNotificationAuthorization() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            if granted {
+                print("알림 권한이 허용되었습니다.")
+            } else {
+                print("알림 권한이 거부되었습니다.")
+            }
+        }
     }
 
 }
@@ -67,6 +91,7 @@ extension AppDelegate: MessagingDelegate{
         print(dataDict)
      
     }
+    
 }
 
 @available(iOS 10, *)
@@ -78,20 +103,13 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions)
                                 -> Void) {
         
-        let userInfo = notification.request.content.userInfo
-        
-        
-        // Do Something With MSG Data...
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
-        }
         
         // MARK: 음악 알림 테스트
-        GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
-        print(userInfo)
+        // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
         
-        completionHandler([[.banner, .badge, .sound]])
+        completionHandler([])
     }
+    
     
     // 푸시메세지를 받았을 떄
     func userNotificationCenter(_ center: UNUserNotificationCenter,
