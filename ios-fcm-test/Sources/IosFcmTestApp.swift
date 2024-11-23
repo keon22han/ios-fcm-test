@@ -2,6 +2,7 @@ import SwiftUI
 import FirebaseCore
 import Firebase
 import FirebaseMessaging
+import BackgroundTasks
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
@@ -11,7 +12,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         requestNotificationAuthorization()
         
         FirebaseApp.configure()
-        application.registerForRemoteNotifications()
         
         // MARK: 원격 알림 등록
         UNUserNotificationCenter.current().delegate = self
@@ -21,46 +21,27 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             options: authOption,
             completionHandler: {_, _ in })
         
+        application.registerForRemoteNotifications()
+        
         // MARK: 메세징 delegate
         Messaging.messaging().delegate = self
-        
-//        Messaging.messaging().token { token, error in
-//            if let error = error {
-//                print("Error fetching FCM token: \(error)")
-//            } else if let token = token {
-//                print("FCM token: \(token)")
-//            }
-//        }
         
         UNUserNotificationCenter.current().delegate = self
         return true
     }
     
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("Received silent push: \(userInfo)")
+        completionHandler(.newData)
+    }
+    
+    
     // MARK: fcm 토큰이 등록 되었을 때
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
+        
         print("sdfasfdafasfewfa")
-    }
-    
-    func application(_ application: UIApplication,
-                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        
-        if let data = userInfo["key1"] {
-            print("\(data)")
-            // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
-        }
-        
-//        if let messageID = userInfo["gcm.message_id"] {
-//            print("Message ID: \(messageID)")
-//        }
-        
-        //print(userInfo)
-        
-        // 예: 진동 또는 소리 재생
-        // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
-
-        completionHandler(.newData)
     }
     
     func requestNotificationAuthorization() {
@@ -77,7 +58,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 // Cloud Messaging...
-extension AppDelegate: MessagingDelegate{
+extension AppDelegate: MessagingDelegate {
     
     // fcm 등록 토큰을 받았을 때
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
@@ -103,10 +84,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions)
                                 -> Void) {
         
-        
-        // MARK: 음악 알림 테스트
-        // GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
-        
+        print("success to foreground messaging")
         completionHandler([])
     }
     
