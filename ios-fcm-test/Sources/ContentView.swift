@@ -8,11 +8,9 @@ public struct ContentView: View {
         Text("Hello, World!")
             .padding()
         Button(action: {
-            // subscribeToTopic()
-            // MARK: 음악 알림 테스트
-            GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
+            // test code
         }) {
-            Text("subscribe")
+            Text("test")
         }
     }
 }
