@@ -5,11 +5,14 @@ import FirebaseMessaging
 import BackgroundTasks
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    
-    let gcmMessageIDKey = "gcm.message_id"
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        requestNotificationAuthorization()
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            print(granted)
+        }
+        
+        application.registerForRemoteNotifications() // func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) 호출
         
         FirebaseApp.configure()
         
@@ -21,8 +24,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             options: authOption,
             completionHandler: {_, _ in })
         
-        application.registerForRemoteNotifications()
-        
         // MARK: 메세징 delegate
         Messaging.messaging().delegate = self
         
@@ -33,28 +34,19 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         print("Received silent push: \(userInfo)")
+        for i in 0...1000 {
+            sleep(1)
+            print("sleep \(i)")
+        }
         completionHandler(.newData)
     }
     
-    
-    // MARK: fcm 토큰이 등록 되었을 때
+    // MARK: fcm 토큰이 등록 되었을 때. (FirebaseApp.configure() 이 있으면 해당 delegate가 호출되지 않는 것처럼 보임.)
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        Messaging.messaging().apnsToken = deviceToken
-        
-        print("sdfasfdafasfewfa")
+        // Messaging.messaging().apnsToken = deviceToken
+        let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        print(tokenString)
     }
-    
-    func requestNotificationAuthorization() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
-            if granted {
-                print("알림 권한이 허용되었습니다.")
-            } else {
-                print("알림 권한이 거부되었습니다.")
-            }
-        }
-    }
-
 }
 
 // Cloud Messaging...
@@ -99,9 +91,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         GroupSoundPlayerManager.shared.play(soundPlayer: SoundOnlyPlayer())
         print("백그라운드 상태 푸시메세지 받음")
         // Do Something With MSG Data...
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
-        }
         
         print(userInfo)
         
@@ -111,7 +100,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
 @main
 struct IosFcmTestApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @UIApplicationDelegateAdaptor var delegate: AppDelegate
     var body: some Scene {
         WindowGroup {
             ContentView()

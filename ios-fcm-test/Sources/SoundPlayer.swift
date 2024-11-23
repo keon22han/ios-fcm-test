@@ -13,8 +13,10 @@ public class SoundPlayer {
     
     init() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
+            Task{
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                try AVAudioSession.sharedInstance().setActive(true)
+            }
         } catch {
             print("Error: AVAudioSession 설정 실패")
         }
